@@ -1,0 +1,86 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.0'
+    id 'io.spring.dependency-management' version '1.1.5'
+    id 'org.graalvm.buildtools.native' version '0.10.2'
+    id 'com.github.node-gradle.node' version '7.0.2'
+}
+
+group = 'kr.kkj.server'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = '21'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'redis.clients:jedis:3.3.0'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+
+
+node {
+    //노드 버전
+    version = "18.17.1"
+    // 다운로드 여부 true
+    download = true
+    // yarn 버전
+    yarnVersion = "1.22.22"
+    //frontend 프로젝트 위치 설정 빌드 할때 한번에 하기 위해
+    nodeProjectDir = file("${project.projectDir}/front-gui")
+}
+
+
+// static 이하 삭제
+task cleanFront(type: Delete) {
+    delete fileTree(dir: 'src/main/resources/static').matching { include '**' }
+}
+
+
+
+task deleteNodeModules(type: Delete) {
+    delete "front-gui/node_modules"
+}
+
+task nodeInstall(type: YarnTask){
+    dependsOn deleteNodeModules
+    args = ['install']    // install
+}
+
+
+//front-gui 디렉토리에서 yarn build를 실행 후 arifect를 src/main/resources/static 디렉토리로 복사
+task frontBuild(type: YarnTask) {
+    args = ['build']    // 빌드
+}
+
+task frontBuildALL(type: YarnTask) {
+    dependsOn nodeInstall
+    dependsOn cleanFront // artifect 파일 삭제
+    dependsOn frontBuild
+}
+
+//의존성 추가
+//processResources.dependsOn frontBuildALL
+
+
+

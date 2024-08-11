@@ -1,0 +1,134 @@
+services:
+  ringo-redis-client:
+    container_name: ringo-app-intellij
+    build:
+      context: ../..
+      dockerfile: ./.devcontainer/intellij-containers/Dockerfile
+    ports:
+      - "9090:9090"
+      - "9191:9191"
+      - "5173:5173"
+    volumes:
+      - ../..:/RingoRedisClient
+      - /RingoRedisClient/.git
+    networks:
+      redis-cluster:
+        ipv4_address: 172.23.0.10
+  redis-node-0:
+    image: docker.io/bitnami/redis-cluster:7.2
+    ports:
+      - 6371:6379
+    volumes:
+      - ./cluster/redis-cluster_data-0:/bitnami/redis/data
+    environment:
+      - 'REDIS_PASSWORD=bitnami'
+      - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+    networks:
+      redis-cluster:
+        ipv4_address: 172.23.0.2
+  redis-node-1:
+    image: docker.io/bitnami/redis-cluster:7.2
+    ports:
+      - 6372:6379
+    volumes:
+      - ./cluster/redis-cluster_data-1:/bitnami/redis/data
+    environment:
+      - 'REDIS_PASSWORD=bitnami'
+      - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+    networks:
+      redis-cluster:
+        ipv4_address: 172.23.0.3
+  redis-node-2:
+    image: docker.io/bitnami/redis-cluster:7.2
+    ports:
+      - 6373:6379
+    volumes:
+      - ./cluster/redis-cluster_data-2:/bitnami/redis/data
+    environment:
+      - 'REDIS_PASSWORD=bitnami'
+      - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+    networks:
+      redis-cluster:
+        ipv4_address: 172.23.0.4
+  redis-node-3:
+    image: docker.io/bitnami/redis-cluster:7.2
+    ports:
+      - 6374:6379
+    volumes:
+      - ./cluster/redis-cluster_data-3:/bitnami/redis/data
+    environment:
+      - 'REDIS_PASSWORD=bitnami'
+      - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+    networks:
+      redis-cluster:
+        ipv4_address: 172.23.0.5
+  redis-node-4:
+    image: docker.io/bitnami/redis-cluster:7.2
+    ports:
+      - 6375:6379
+    volumes:
+      - ./cluster/redis-cluster_data-4:/bitnami/redis/data
+    environment:
+      - 'REDIS_PASSWORD=bitnami'
+      - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+    networks:
+      redis-cluster:
+        ipv4_address: 172.23.0.6
+  redis-node-5:
+    image: docker.io/bitnami/redis-cluster:7.2
+    ports:
+      - 6379:6379
+    volumes:
+      - ./cluster/redis-cluster_data-5:/bitnami/redis/data
+    depends_on:
+      - redis-node-0
+      - redis-node-1
+      - redis-node-2
+      - redis-node-3
+      - redis-node-4
+    environment:
+      - 'REDIS_PASSWORD=bitnami'
+      - 'REDISCLI_AUTH=bitnami'
+      - 'REDIS_CLUSTER_REPLICAS=1'
+      - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+      - 'REDIS_CLUSTER_CREATOR=yes'
+    networks:
+      redis-cluster:
+        ipv4_address: 172.23.0.7
+  local-redis:
+    image: redis/redis-stack-server:7.2.0-v6
+    restart: always
+    ports:
+      - "6380:6380"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+    volumes:
+      - ./simple/local_redis_data:/root/redis
+      - ./simple/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      redis-cluster:
+        ipv4_address: 172.23.0.8
+
+volumes:
+  redis-cluster_data-0:
+    driver: local
+  redis-cluster_data-1:
+    driver: local
+  redis-cluster_data-2:
+    driver: local
+  redis-cluster_data-3:
+    driver: local
+  redis-cluster_data-4:
+    driver: local
+  redis-cluster_data-5:
+    driver: local
+  local_redis_data:
+    driver: local
+
+networks:
+  redis-cluster:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16

@@ -1,0 +1,18 @@
+// How to get remote container development working with VSCode:
+// 1. Install "Remote Development" extension pack (ms-vscode-remote.vscode-remote-extensionpack)
+// 2. Select "Remote Containers - Reopen in container"
+
+{
+  "name": "RinggoRedisClient",
+  "dockerComposeFile": [
+    "./intellij-containers/docker-compose.yml"
+  ],
+  "forwardPorts": [9090,9191,5173],
+  "service": "ringo-redis-client",
+  "workspaceFolder": "/ringo-app",
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+//  "extensions": [],
+  "postCreateCommand": "cd front-gui && rm -rf node_modules && yarn install"
+}
